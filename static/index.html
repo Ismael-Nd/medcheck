@@ -1,3 +1,62 @@
 <!doctype html>
 <html lang="en">
-<head></head>    
+<head>
+  <meta charset="utf-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MedCheck: Know your medicine</title>
+  <meta name="description" content="Look up what a medicine is for, how to take it, its side effects, and whether it has been recalled. Data from the U.S. FDA.">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2318181b'/%3E%3Cpath d='M13 8h6v5h5v6h-5v5h-6v-5H8v-6h5z' fill='white'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a href="#/" class="brand">MedCheck</a>
+  </header>
+
+  <main>
+    <!-- Screen 1: search -->
+    <section id="search-view">
+      <h1>Know your medicine</h1>
+      <p class="lead">Look up what a medicine is for, how to take it, and whether it has been recalled.</p>
+
+      <form id="search-form" role="search" novalidate>
+        <label for="q" class="visually-hidden">Medicine name</label>
+        <input id="q" type="search" placeholder="Search a medicine, e.g. ibuprofen"
+               autocomplete="off" maxlength="50" spellcheck="false">
+        <button type="submit">Search</button>
+      </form>
+      <p id="form-error" class="form-error" role="alert" hidden></p>
+
+      <div id="controls" class="controls" hidden>
+        <div class="chips" role="group" aria-label="Medicine type">
+          <button type="button" class="chip" data-type="all">All</button>
+          <button type="button" class="chip" data-type="otc">Over the counter</button>
+          <button type="button" class="chip" data-type="rx">Prescription</button>
+        </div>
+        <label class="sort">Sort by
+          <select id="sort">
+            <option value="name">Name</option>
+            <option value="updated">Recently updated</option>
+            <option value="manufacturer">Manufacturer</option>
+          </select>
+        </label>
+      </div>
+
+      <div id="status" class="status" aria-live="polite"></div>
+      <ul id="results" class="results"></ul>
+      <div id="suggestions" class="suggestions"></div>
+    </section>
+
+    <!-- Screen 2: one medicine (filled in by app.js) -->
+    <section id="drug-view" hidden></section>
+  </main>
+
+  <footer class="footer">
+    <p>Information only, not medical advice. Always follow your doctor or pharmacist.</p>
+    <p>Data from <a href="https://open.fda.gov/" target="_blank" rel="noopener">openFDA</a> (U.S. Food and Drug Administration) · <span id="served-by"></span></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
