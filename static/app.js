@@ -395,4 +395,182 @@ function readMore(rawText) {
     paragraph.textContent = expanded ? text : short;
     button.textContent = expanded ? "Show less" : "Show more";
   });
-  return el("div", {}, paragraph
+  return el("div", {}, paragraph, button);
+}
+
+async function loadRecallStatus(box, generic) {
+  try {
+    const data = await api(`/api/recalls?${new URLSearchParams({ name: generic })}`);
+    const who = `medicines containing ${generic.toLowerCase()}`;
+    if (data.ongoing > 0) {
+      box.className = "recall-status bad";
+      box.replaceChildren(el("span", { class: "dot" }),
+        `${plural(data.ongoing, "ongoing recall")} for ${who}. Check the recall history below.`);
+    } else if (data.count > 0) {
+      box.className = "recall-status ok";
+      box.replaceChildren(el("span", { class: "dot" }),
+        `No ongoing recalls (${plural(data.count, "past recall")} for ${who}).`);
+    } else {
+      box.className = "recall-status ok";
+      box.replaceChildren(el("span", { class: "dot" }), "No recalls on record.");
+    }
+  } catch (err) {
+    box.className = "recall-status";
+    box.replaceChildren(el("span", { class: "dot" }), `Couldn't check recalls: ${err.message}`);
+  }
+}
+
+async function loadTopSideEffects(box, generic) {
+  try {
+    const data = await api(`/api/side-effects?${new URLSearchParams({ name: generic })}`);
+    if (data.count === 0) {
+      box.replaceChildren(el("p", { text: "No side effect reports found." }));
+      return;
+    }
+    box.replaceChildren(
+      el("ul", {}, ...data.results.slice(0, 5).map((e) => el("li", { text: e.reaction }))),
+      el("p", { class: "note", text: "Based on reports sent to the FDA. A report does not prove the medicine caused it." }),
+    );
+  } catch (err) {
+    box.replaceChildren(errorBox(err.message, () => loadTopSideEffects(box, generic)));
+  }
+}
+
+
+// -------------------------------------------- "See all" section (details)
+
+function renderMore(container, generic) {
+  if (!generic) {
+    container.replaceChildren(el("p", { text: "No side effect or recall data is available for this medicine." }));
+    return;
+  }
+
+  // Side effects chart with an "All reports / Serious only" toggle.
+  const chart = el("div");
+  const toggle = el("div", { class: "toggle", role: "group", "aria-label": "Which reports" });
+  [["All reports", false], ["Serious only", true]].forEach(([text, serious]) => {
+    toggle.append(el("button", {
+      type: "button",
+      "aria-pressed": String(!serious),
+      onclick: (event) => {
+        toggle.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", "false"));
+        event.currentTarget.setAttribute("aria-pressed", "true");
+        loadChart(chart, generic, serious);
+      },
+    }, text));
+  });
+
+  // Recall list with severity filter and sort order.
+  const recallList = el("div");
+  const classSelect = el("select", { "aria-label": "Recall severity" },
+    el("option", { value: "all" }, "All severities"),
+    el("option", { value: "I" }, "Class I (most serious)"),
+    el("option", { value: "II" }, "Class II"),
+    el("option", { value: "III" }, "Class III (least serious)"));
+  const sortRecalls = el("select", { "aria-label": "Sort recalls" },
+    el("option", { value: "newest" }, "Newest first"),
+    el("option", { value: "oldest" }, "Oldest first"),
+    el("option", { value: "severity" }, "Most serious first"));
+  const reloadRecalls = () => loadRecallList(recallList, generic, classSelect.value, sortRecalls.value);
+  classSelect.addEventListener("change", reloadRecalls);
+  sortRecalls.addEventListener("change", reloadRecalls);
+
+  container.replaceChildren(
+    el("section", { class: "block" },
+      el("div", { class: "row-head" }, el("h2", { text: "Side effects reported to the FDA" }), toggle),
+      chart,
+      el("p", { class: "note", text: "Number of reports that mention each reaction. A report does not prove the medicine caused it." })),
+    el("section", { class: "block" },
+      el("div", { class: "row-head" }, el("h2", { text: "Recall history" }),
+        el("div", { class: "filters" }, classSelect, sortRecalls)),
+      recallList),
+  );
+
+  loadChart(chart, generic, false);
+  reloadRecalls();
+}
+
+async function loadChart(box, generic, serious) {
+  box.replaceChildren(loadingLine("Loading…"));
+  try {
+    const params = new URLSearchParams({ name: generic, serious: String(serious) });
+    const data = await api(`/api/side-effects?${params}`);
+    if (data.count === 0) {
+      box.replaceChildren(el("p", { text: "No reports found." }));
+      return;
+    }
+    const max = Math.max(...data.results.map((e) => e.count));
+    box.replaceChildren(...data.results.map((e) =>
+      el("div", { class: "bar-row" },
+        el("span", { text: e.reaction }),
+        el("span", { class: "bar-track", "aria-hidden": "true" },
+          el("span", { class: "bar-fill", style: `width: ${((e.count / max) * 100).toFixed(1)}%` })),
+        el("span", { class: "bar-value", text: e.count.toLocaleString() }))));
+  } catch (err) {
+    box.replaceChildren(errorBox(err.message, () => loadChart(box, generic, serious)));
+  }
+}
+
+async function loadRecallList(box, generic, level, sort) {
+  box.replaceChildren(loadingLine("Loading…"));
+  try {
+    const params = new URLSearchParams({ name: generic, class: level, sort });
+    const data = await api(`/api/recalls?${params}`);
+    if (data.count === 0) {
+      box.replaceChildren(el("p", { text: level === "all" ? "No recalls on record." : "No recalls of this severity." }));
+      return;
+    }
+    const SHOW_FIRST = 8;
+    const items = data.results.map((r) =>
+      el("li", {},
+        el("div", { class: "meta" },
+          el("span", { text: r.date }),
+          el("span", { class: r.classification === "Class I" ? "badge class-1" : "badge", text: r.classification }),
+          el("span", { class: r.status === "Ongoing" ? "badge ongoing" : "badge", text: r.status })),
+        el("p", { text: shorten(r.reason, 220) })));
+
+    // Long lists: show the first few, with a button to show the rest.
+    items.slice(SHOW_FIRST).forEach((item) => { item.hidden = true; });
+    const showAll = items.length > SHOW_FIRST && el("button", {
+      class: "link-button", type: "button",
+      onclick: (event) => {
+        items.forEach((item) => { item.hidden = false; });
+        event.currentTarget.remove();
+      },
+    }, `Show all ${data.count} recalls`);
+
+    box.replaceChildren(el("ul", { class: "recalls" }, ...items), showAll);
+  } catch (err) {
+    box.replaceChildren(errorBox(err.message, () => loadRecallList(box, generic, level, sort)));
+  }
+}
+
+
+// --------------------------------------------------------------- events
+
+form.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const q = input.value.trim();
+  if (!VALID_QUERY.test(q)) {
+    formError.textContent = "Please type 2 to 50 letters, numbers or spaces.";
+    formError.hidden = false;
+    input.focus();
+    return;
+  }
+  go(searchHash(q, current.q ? current.type : "all", current.q ? current.sort : "name"));
+});
+
+document.querySelectorAll(".chip").forEach((chip) => {
+  chip.addEventListener("click", () => go(searchHash(current.q, chip.dataset.type, current.sort)));
+});
+
+sortSelect.addEventListener("change", () => go(searchHash(current.q, current.type, sortSelect.value)));
+
+window.addEventListener("hashchange", route);
+
+// Footer: which server answered (shows the load balancer at work).
+api("/api/health")
+  .then((data) => { $("#served-by").textContent = `Served by ${data.server}`; })
+  .catch(() => {});
+
+route();
