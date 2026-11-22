@@ -1,5 +1,5 @@
 # MedCheck: Flask backend.
-# so the API key stays on the server and never reaches the browser.
+# so the API key stays on the server and orher activities.
 
 import os
 import re
