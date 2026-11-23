@@ -1,0 +1,13 @@
+[Unit]
+Description=MedCheck Flask app (Gunicorn)
+After=network.target
+
+[Servive]
+User=ubuntu
+WorkingDirectory=/home/ubuntu/medcheck
+ExecStart=/home/ubuntu/medcheck/venv/bin/gunicorn --
+workers 3 --bind 127.0.0.1:5000 app:app
+Restart=always
+
+[Install]
+Wanted=multi-user.target
