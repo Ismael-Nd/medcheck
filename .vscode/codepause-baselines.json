@@ -1,8 +1,11 @@
 {
   "/run/media/ismail/Data/Development/medcheck/static/index.html": 9,
-  "/run/media/ismail/Data/Development/medcheck/.vscode/settings.json": 4,
-  "Untitled-1": 55,
+  "/run/media/ismail/Data/Development/medcheck/.vscode/settings.json": 5,
   "/run/media/ismail/Data/Development/medcheck/static/style.css": 99,
   "/run/media/ismail/Data/Development/medcheck/static/app.js": 0,
-  "Untitled-2": 0
+  "/run/media/ismail/Data/Development/medcheck/.gitignore": 0,
+  "/run/media/ismail/Data/Development/medcheck/.env": 0,
+  "/run/media/ismail/Data/Development/medcheck/requirements.txt": 13,
+  "/run/media/ismail/Data/Development/medcheck/deploy/medcheck.service": 0,
+  "/run/media/ismail/Data/Development/medcheck/deploy/nginx-medcheck.conf": 0
 }
