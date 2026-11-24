@@ -36,7 +36,18 @@ body {
   align-items: center;
   gap: 10px;
   font-weight: 600;
-  f
+  font-size:  18px;
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+
+/* The + logo; its colour follows the text colour */
+.logo {
+  width: 28px;
+  height: 28px;
+  color: var(--text);
+  flex-shrink: 0;
+}
 
 a { color: inherit; }
 
