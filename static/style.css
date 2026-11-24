@@ -43,8 +43,8 @@ body {
 
 /* The + logo; its colour follows the text colour */
 .logo {
-  /* width: 28px;
-  height: 28px; */
+  width: 28px;
+  height: 28px;
   color: var(--text);
   flex-shrink: 0;
 }
@@ -71,11 +71,6 @@ main,
 
 .topbar { padding-top: 20px; padding-bottom: 8px; }
 
-.brand {
-  font-weight: 600;
-  text-decoration: none;
-  letter-spacing: -0.01em;
-}
 
 main { padding-top: 32px; padding-bottom: 48px; min-height: 60vh; }
 
