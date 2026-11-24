@@ -43,8 +43,8 @@ body {
 
 /* The + logo; its colour follows the text colour */
 .logo {
-  width: 28px;
-  height: 28px;
+  /* width: 28px;
+  height: 28px; */
   color: var(--text);
   flex-shrink: 0;
 }
