@@ -30,6 +30,14 @@ body {
   line-height: 1.6;
 }
 
+/* Logo + name side by side */
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  f
+
 a { color: inherit; }
 
 button, input, select { font: inherit; color: inherit; }
