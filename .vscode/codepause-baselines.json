@@ -4,8 +4,13 @@
   "/run/media/ismail/Data/Development/medcheck/static/style.css": 99,
   "/run/media/ismail/Data/Development/medcheck/static/app.js": 0,
   "/run/media/ismail/Data/Development/medcheck/.gitignore": 0,
-  "/run/media/ismail/Data/Development/medcheck/.env": 0,
+  "/run/media/ismail/Data/Development/medcheck/.env": 1,
   "/run/media/ismail/Data/Development/medcheck/requirements.txt": 13,
   "/run/media/ismail/Data/Development/medcheck/deploy/medcheck.service": 0,
-  "/run/media/ismail/Data/Development/medcheck/deploy/nginx-medcheck.conf": 0
+  "/run/media/ismail/Data/Development/medcheck/deploy/nginx-medcheck.conf": 0,
+  "/run/media/ismail/Data/Development/medcheck/openfda.py": 236,
+  "/run/media/ismail/Data/Development/medcheck/app.py": 180,
+  "Untitled-3": 0,
+  "Untitled-4": 0,
+  "/run/media/ismail/Data/Development/medcheck/.vscode/codepause-baselines.json": 11
 }
