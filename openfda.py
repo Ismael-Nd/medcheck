@@ -4,6 +4,10 @@
 import os
 import re
 import time
+import json
+import hashlib
+import tempfile
+import time
 
 import requests
 
@@ -11,7 +15,7 @@ BASE_URL = "https://api.fda.gov/drug"
 TIMEOUT = 15           # seconds: never wait forever for openFDA
 RETRIES = 2            # openFDA is sometimes flaky, so try twice
 CACHE_TTL = 60 * 60    # keep answers for 1 hour
-CACHE_MAX = 500        # max number of cached answers
+CACHE_DIR = os.path.json(tempfile.gettempdir(), "medcheck-cache")
 
 # Reaction terms that are not real side effects, hidden from the chart.
 NOT_SIDE_EFFECTS = {
@@ -33,7 +37,35 @@ NOT_SIDE_EFFECTS = {
     "DEATH",
 }
 
-_cache = {}
+# The cache is stored as small files on disk instead of in memory.
+# Gunicorn runs several worker processes and each has its own memory,
+# so an in-memory cache was only shared by 1 worker. Files are shared by all of them.
+def _cache_path(endpoint, params):
+    key = endpoint + "?" + json.dumps(params, sort_keys=True)
+    return os.path.join(CACHE_DIR, hashlib.sha256(key.encode()).hexdigest() + ".json")
+
+# Returns (True, data) if a fresh answer is cached, otherwise (False, None).
+def _cache_read(path):
+    try:
+        if time.time() - os.path.getmtime(path) < CACHE_TTL:
+            with open(path, encoding="utf-8") as f:
+                return True, json.load(f)
+    except (OSError, ValueError):
+        pass                              # missing or broken file: treat as not cached
+    return False, None
+
+# Writes to a temporary file first, then renames it, so another worker
+# never reads a half-written file.
+def _cache_write(path, data):
+    try:
+        os.makedirs(CACHE_DIR, exist_ok=True)
+        tmp = f"{path}.{os.getpid()}.tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(data, f)
+        os.replace(tmp, path)
+    except OSError:
+        pass                              # caching is optional: never crash because of it
+
 
 
 # Raised when openFDA is down, slow, rate-limited or returns an error.
@@ -80,10 +112,10 @@ def format_date(raw):
 # Returns the parsed JSON, or None when openFDA finds no matches (404).
 # Raises OpenFDAError for every other problem.
 def _get(endpoint, params):
-    cache_key = (endpoint, tuple(sorted(params.items())))
-    cached = _cache.get(cache_key)
-    if cached and time.time() - cached[0] < CACHE_TTL:
-        return cached[1]
+    cache_path = _cache_path(endpoint, params)
+    found, data = _cache_read(cache_path)
+    if found:
+        return data
 
     query = dict(params)
     api_key = os.getenv("OPENFDA_API_KEY")
@@ -115,9 +147,7 @@ def _get(endpoint, params):
         except ValueError as err:
             raise OpenFDAError("openFDA sent an invalid response") from err
 
-    if len(_cache) >= CACHE_MAX:
-        _cache.clear()
-    _cache[cache_key] = (time.time(), data)
+    _cache_write(cache_path, data)
     return data
 
 

@@ -177,4 +177,10 @@ def server_error(_error):
 @app.after_request
 def add_server_header(response):
     response.headers["X-Served-By"] = SERVER_NAME
+    # Let the browser keep successful medicine data for 1 hour, so searching
+    # the same medicine again is instant and doesn't even reach the server.
+    # /api/health is left out so it always shows which server answered.
+    if (request.path.startswith("/api/") and request.path != "/api/health"
+            and response.status_code == 200):
+        response.headers["Cache-Control"] = "public, max-age=3600"
     return response
