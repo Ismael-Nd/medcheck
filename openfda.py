@@ -15,7 +15,7 @@ BASE_URL = "https://api.fda.gov/drug"
 TIMEOUT = 15           # seconds: never wait forever for openFDA
 RETRIES = 2            # openFDA is sometimes flaky, so try twice
 CACHE_TTL = 60 * 60    # keep answers for 1 hour
-CACHE_DIR = os.path.json(tempfile.gettempdir(), "medcheck-cache")
+CACHE_DIR = os.path.join(tempfile.gettempdir(), "medcheck-cache")
 
 # Reaction terms that are not real side effects, hidden from the chart.
 NOT_SIDE_EFFECTS = {
