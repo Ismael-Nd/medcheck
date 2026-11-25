@@ -2,7 +2,7 @@
 
 A simple web app to look up a medicine and see, in plain language, **what it's for, how to take it, its warnings, reported side effects, and recall history**. Data comes from the U.S. FDA's **openFDA API**.
 
-**Live:** https://medcheck.ismaelnd.tech · **Demo video:** <PASTE LINK>
+**Live:** https://medcheck.ismaelnd.tech · **Demo video:** (https://www.loom.com/share/56d4a1d313a44b35b238050ddc4faf29)
 
 > Information only, not medical advice.
 
